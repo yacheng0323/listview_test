@@ -29,50 +29,111 @@ class _HomeFuturePageState extends State<HomeFuturePage> {
       ),
       body: FutureBuilder<List<Section>>(
         future: RestfulClient.getSectionSetting(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CupertinoActivityIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('錯誤'));
+        builder: (context, sectionSnapshot) {
+          if (sectionSnapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (sectionSnapshot.hasError) {
+            return Center(child: Text('Error: ${sectionSnapshot.error}'));
           } else {
-            List<Section> sections = snapshot.data!;
-            return RefreshIndicator(
-              key: _refreshIndicatorKey,
-              onRefresh: () async {
-                setState(() {});
+            final sections = sectionSnapshot.data!;
+            return CustomScrollView(
+              slivers: sections.map((section) {
+                return FutureBuilder<List<Item>>(
+                  future: RestfulClient.getItemList(section.id),
+                  builder: (context, itemSnapshot) {
+                    if (itemSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return SliverToBoxAdapter(
+                        child: Center(child: CupertinoActivityIndicator()),
+                      );
+                    } else if (itemSnapshot.hasError) {
+                      return SliverToBoxAdapter(
+                        child:
+                            Center(child: Text('Error: ${itemSnapshot.error}')),
+                      );
+                    } else {
+                      final items = itemSnapshot.data!;
 
-                await RestfulClient.getSectionSetting();
-              },
-              child: ListView.builder(
-                // key: const PageStorageKey<String>("my_list"),
-                itemCount: sections.length,
-                cacheExtent: double.maxFinite, // 設定緩存範圍
-                itemBuilder: (context, index) {
-                  Section section = sections[index];
-                  switch (index) {
-                    case 0:
-                      return HorizontalListSection(section: section);
-                    case 1:
-                      return GridViewSection(section: section);
-                    case 2:
-                      return ListViewSection(section: section);
-                    case 3:
-                      return GridViewSection(section: section);
-                    case 4:
-                      return HorizontalListSection(section: section);
-
-                    default:
-                      return Container();
-                  }
-                },
-              ),
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            print("this is ${section.id} - $index");
+                            final item = items[index];
+                            return Container(
+                              height: item.height,
+                              color: item.color,
+                              margin: items.last == item
+                                  ? const EdgeInsets.fromLTRB(0, 0, 0, 24)
+                                  : const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Center(
+                                child: Text(
+                                  "${section.id} - $index",
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                ),
+                              ),
+                            );
+                          },
+                          childCount: section.maxItemCount < items.length
+                              ? section.maxItemCount
+                              : items.length,
+                        ),
+                      );
+                    }
+                  },
+                );
+              }).toList(),
             );
           }
         },
       ),
     );
+    //   body: FutureBuilder<List<Section>>(
+    //     future: RestfulClient.getSectionSetting(),
+    //     builder: (context, snapshot) {
+    //       if (snapshot.connectionState == ConnectionState.waiting) {
+    //         return const Center(child: CupertinoActivityIndicator());
+    //       } else if (snapshot.hasError) {
+    //         return Center(child: Text('Error: ${snapshot.error}'));
+    //       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+    //         return const Center(child: Text('錯誤'));
+    //       } else {
+    //         List<Section> sections = snapshot.data!;
+    //         return RefreshIndicator(
+    //           key: _refreshIndicatorKey,
+    //           onRefresh: () async {
+    //             setState(() {});
+
+    //             await RestfulClient.getSectionSetting();
+    //           },
+    //           child: ListView.builder(
+    //             // key: const PageStorageKey<String>("my_list"),
+    //             itemCount: sections.length,
+    //             cacheExtent: double.maxFinite, // 設定緩存範圍
+    //             itemBuilder: (context, index) {
+    //               Section section = sections[index];
+    //               switch (index) {
+    //                 case 0:
+    //                   return HorizontalListSection(section: section);
+    //                 case 1:
+    //                   return GridViewSection(section: section);
+    //                 case 2:
+    //                   return ListViewSection(section: section);
+    //                 case 3:
+    //                   return GridViewSection(section: section);
+    //                 case 4:
+    //                   return HorizontalListSection(section: section);
+
+    //                 default:
+    //                   return Container();
+    //               }
+    //             },
+    //           ),
+    //         );
+    //       }
+    //     },
+    //   ),
+    // );
   }
 }
 

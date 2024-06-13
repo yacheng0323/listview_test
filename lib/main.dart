@@ -17,7 +17,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      // home: const HomeFuturePage(title: "Flutter Demo Home Page"), //** 使用 FutureBuilder */
+      // home: const HomeFuturePage(
+      // title: "Flutter Demo Home Page"), //** 使用 FutureBuilder */
       home: const HomeProviderPage(
           title: "Flutter Demo Home Page"), //** 使用 rxdart + provider */
     );
